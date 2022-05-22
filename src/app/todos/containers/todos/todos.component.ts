@@ -35,12 +35,21 @@ export class TodosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.todoService.getTodos().pipe(
-      map((value  ) => {
-        value.map(value1 => this.todos?.push(value1.title))
-        console.log('map values', value)
-      })
-    ).subscribe();
+    this.todoService.getTodos().subscribe(async value => {
+      this.todos = value
+      console.log('value' , value)
+      await this.handleData(this.todos)
+      console.log('this.inProgres',this.inProgres)
+      console.log('this.done',this.done)
+      console.log('this.todo',this.todos)
+    });
+  }
+
+  handleData(todos : Todo[]) {
+    this.inProgres = todos.filter(value => value.state == 'inProgress')
+    this.done = todos.filter(value => value.state == 'done')
+    this.todos = todos.filter(value => value.state == 'todo')
+
   }
 
   createTodo(form : FormGroup) {
@@ -51,16 +60,11 @@ export class TodosComponent implements OnInit {
       });
     }
   }
-  onItemMoved() {
-    UIkit.util.on('#sortable', 'moved', function () {
-      console.log('moved triggered');
-    });
-  }
 
   drop(event: CdkDragDrop<string[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      console.log('event.container.data' , event.container.data)
+      this.handelDrop(event)
     } else {
       transferArrayItem(
         event.previousContainer.data,
@@ -68,9 +72,34 @@ export class TodosComponent implements OnInit {
         event.previousIndex,
         event.currentIndex,
       );
+      this.handelDrop(event)
     }
   }
-  move(event : CdkDragEnter<string[]>){
-    console.log('move', event.currentIndex)
+
+  handelDrop(event : CdkDragDrop<string[]>) {
+    let state = ''
+    let updateTodo : Todo
+    console.log()
+    const currentIndex = event.container.id.split('-')[3]
+    switch (currentIndex) {
+      case '0' :
+        state = 'todo'
+        break
+      case '1':
+        state = 'inProgress'
+        break
+      case '2':
+        state = 'done'
+        break
+      default :
+        state = 'todo'
+        break
+    }
+    updateTodo = event.container.data[0] as Todo
+    updateTodo.state = state
+    this.todoService.updateState(updateTodo).subscribe()
+
+
   }
+
 }

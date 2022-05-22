@@ -22,4 +22,9 @@ export class TodosService {
       .post<Todo>(this.base_Url + '/new' ,payload)
       .pipe(catchError((error) => {return throwError(error.json())}));
   }
+  updateState(payload: Todo): Observable<Todo> {
+    return this.http
+      .put<Todo>(this.base_Url + `/setState/${payload._id}` , payload)
+      .pipe(catchError((error) => {return throwError(error.json())}));
+  }
 }
