@@ -14,7 +14,7 @@ const app = express();
 
 app.use(requireHTTPS);
 // Serve only the static files form the dist directory
-app.use(express.static(__dirname + '/dist/dist/ng-todo-node'));
+app.use(express.static(__dirname + '/dist/ng-todo-node'));
 
 app.get('/*', function(req,res) {
 
