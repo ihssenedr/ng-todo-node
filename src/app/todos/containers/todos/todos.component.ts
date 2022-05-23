@@ -1,7 +1,7 @@
 import {Component, OnInit, SimpleChange} from '@angular/core';
 import {TodosService} from "../../services";
 import {Todo} from "../../models/todo.model";
-import {CdkDragDrop, CdkDragEnter, moveItemInArray, transferArrayItem} from '@angular/cdk/drag-drop';
+import {CdkDragDrop, CdkDragEnter, moveItemInArray, transferArrayItem ,copyArrayItem} from '@angular/cdk/drag-drop';
 
 import {
   FormControl,
@@ -33,15 +33,13 @@ export class TodosComponent implements OnInit {
   get titleControlInvalid() {
     return this.titleControl.hasError('required') && this.titleControl.touched;
   }
+  ngOnDestroy() : void {
 
+  }
   ngOnInit(): void {
     this.todoService.getTodos().subscribe(async value => {
       this.todos = value
-      console.log('value' , value)
       await this.handleData(this.todos)
-      console.log('this.inProgres',this.inProgres)
-      console.log('this.done',this.done)
-      console.log('this.todo',this.todos)
     });
   }
 
@@ -52,19 +50,51 @@ export class TodosComponent implements OnInit {
 
   }
 
-  createTodo(form : FormGroup) {
+  async createTodo(form : FormGroup) {
     const {value , valid} = form
     if (valid) {
-      this.todoService.createTodo(value).subscribe(todo =>{
-        this.todos?.push(todo.title)
-      });
+       let createdTodo  =  await this.todoService.createTodo(value).toPromise();
+       console.log('created todo' , createdTodo)
+      this.todos.push(createdTodo)
     }
   }
+  async handleDrop(event : CdkDragDrop<string[]>) {
+    let state = ''
+    let updateTodo : Todo
+    const currentIndex = event.container.id.split('-')[3]
+    let updatedtodo
+    switch (currentIndex) {
+      case '0' :
+        state = 'todo'
+        updateTodo = await this.todos.find((value, index) => index === event.currentIndex)
+        updateTodo.state = state
+        console.log('updateTodo',updateTodo)
+        updatedtodo = await this.todoService.updateState(updateTodo).toPromise()
 
-  drop(event: CdkDragDrop<string[]>) {
+        break
+      case '1':
+        state = 'inProgress'
+        updateTodo = await this.inProgres.find((value, index) => index === event.currentIndex)
+        updateTodo.state = state
+        console.log('updateTodo',updateTodo)
+        updatedtodo = await this.todoService.updateState(updateTodo).toPromise()
+        break
+      case '2':
+        state = 'done'
+        updateTodo = await this.done.find((value, index) => index === event.currentIndex)
+        updateTodo.state = state
+        console.log('updateTodo', updateTodo)
+        updatedtodo = await this.todoService.updateState(updateTodo).toPromise()
+        break
+      default :
+        state = 'todo'
+        break
+    }
+
+  }
+  async drop(event: CdkDragDrop<string[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      this.handelDrop(event)
     } else {
       transferArrayItem(
         event.previousContainer.data,
@@ -72,34 +102,10 @@ export class TodosComponent implements OnInit {
         event.previousIndex,
         event.currentIndex,
       );
-      this.handelDrop(event)
     }
+    await this.handleDrop(event)
   }
 
-  handelDrop(event : CdkDragDrop<string[]>) {
-    let state = ''
-    let updateTodo : Todo
-    console.log()
-    const currentIndex = event.container.id.split('-')[3]
-    switch (currentIndex) {
-      case '0' :
-        state = 'todo'
-        break
-      case '1':
-        state = 'inProgress'
-        break
-      case '2':
-        state = 'done'
-        break
-      default :
-        state = 'todo'
-        break
-    }
-    updateTodo = event.container.data[0] as Todo
-    updateTodo.state = state
-    this.todoService.updateState(updateTodo).subscribe()
 
-
-  }
 
 }
