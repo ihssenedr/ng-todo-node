@@ -5,9 +5,11 @@ import {RouterModule, Routes} from "@angular/router";
 
 import * as fromContainers from './containers'
 import * as fromServices from './services'
+import * as fromComponents from './components'
 import {ReactiveFormsModule} from "@angular/forms";
 import {HttpClientModule} from "@angular/common/http";
 import {DragDropModule} from '@angular/cdk/drag-drop';
+
 
 const routes: Routes = [
   {
@@ -17,16 +19,19 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
-    ...fromContainers.containers
-  ],
-  providers : [...fromServices.services],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     DragDropModule,
     HttpClientModule,
     RouterModule.forChild(routes),
-  ]
+  ],
+  declarations: [
+    ...fromContainers.containers,
+    ...fromComponents.components
+  ],
+  providers : [...fromServices.services],
+  exports : [...fromContainers.containers,
+    ...fromComponents.components]
 })
 export class TodosModule { }
